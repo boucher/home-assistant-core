@@ -19,11 +19,10 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.util.network import is_ipv4_address, is_link_local
 
-from .const import CONF_EVENTS, CONF_MJPEG_VIDEO, DOMAIN, DOORBIRD_OUI
+from .const import CONF_MJPEG_VIDEO, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_doorstation_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -157,39 +156,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         return info, errors
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for doorbird."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
-        """Handle options flow."""
-        if user_input is not None:
-            events = [event.strip() for event in user_input[CONF_EVENTS].split(",")]
-
-            return self.async_create_entry(title="", data={CONF_EVENTS: events})
-
-        current_events = self.config_entry.options.get(CONF_EVENTS, [])
-
-        # We convert to a comma separated list for the UI
-        # since there really isn't anything better
-        options_schema = vol.Schema(
-            {vol.Optional(CONF_EVENTS, default=", ".join(current_events)): str}
-        )
-
-        return self.async_show_form(step_id="init", data_schema=options_schema)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

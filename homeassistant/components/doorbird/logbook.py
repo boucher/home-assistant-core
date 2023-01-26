@@ -1,8 +1,6 @@
 """Describe logbook events."""
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.components.logbook import (
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_MESSAGE,
@@ -11,7 +9,7 @@ from homeassistant.components.logbook import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 
-from .const import DOMAIN, DOOR_STATION, DOOR_STATION_EVENT_ENTITY_IDS
+from .const import DOMAIN, DOOR_STATION_EVENT_ENTITY_IDS
 
 
 @callback
@@ -31,13 +29,7 @@ def async_describe_events(hass, async_describe_event):
             ].get(doorbird_event, event.data.get(ATTR_ENTITY_ID)),
         }
 
-    domain_data: dict[str, Any] = hass.data[DOMAIN]
-
-    for data in domain_data.values():
-        if DOOR_STATION not in data:
-            # We need to skip door_station_event_entity_ids
-            continue
-        for event in data[DOOR_STATION].doorstation_events:
-            async_describe_event(
-                DOMAIN, f"{DOMAIN}_{event}", async_describe_logbook_event
-            )
+    for doorbird_event in ("doorbell", "motionsensor"):
+        async_describe_event(
+            DOMAIN, f"{DOMAIN}_{doorbird_event}", async_describe_logbook_event
+        )

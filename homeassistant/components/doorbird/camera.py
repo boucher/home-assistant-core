@@ -56,7 +56,7 @@ async def async_setup_entry(
                 device.live_image_url,
                 "live",
                 f"{doorstation.name} Live",
-                doorstation.doorstation_events,
+                ["doorbell", "motionsensor"],
                 _LIVE_INTERVAL,
                 device.live_video_url if mjpeg_video else device.rtsp_live_video_url,
                 mjpeg_video,
