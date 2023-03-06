@@ -1,5 +1,6 @@
 """Support for DoorBird devices."""
 from __future__ import annotations
+import asyncio
 
 from http import HTTPStatus
 import logging
@@ -97,17 +98,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     name = doorstation_config.get(CONF_NAME)
     doorstation = ConfiguredDoorBird(device, name)
 
-    def handle_event(event):
+    async def async_notify_event(event):
+        print("FIRING EVENT: " + event)
         event_data = doorstation.get_event_data()
-
         event_data[ATTR_ENTITY_ID] = hass.data[DOMAIN][
             DOOR_STATION_EVENT_ENTITY_IDS
         ].get(event)
-
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
 
+    def handle_event(event):
+        asyncio.run_coroutine_threadsafe(async_notify_event(event), hass.loop)
+
+    async def async_handle_error(error):
+        _LOGGER.error(error)
+        hass.config_entries.async_reload(entry.entry_id)
+
+    def handle_error(error):
+        print("ERROR!: " + error)
+        asyncio.run_coroutine_threadsafe(async_handle_error(error), hass.loop)
+
     # Subscribe to doorbell and motion events
-    device.start_monitoring(handle_event)
+    device.start_monitoring(handle_event, handle_error)
 
     hass.data[DOMAIN][config_entry_id] = {
         DOOR_STATION: doorstation,
